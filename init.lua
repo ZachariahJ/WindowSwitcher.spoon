@@ -17,7 +17,9 @@
 --- `glass.swift` only draws the panel. It is compiled to `glass` on first start
 --- (needs Xcode Command Line Tools), runs in the background, and takes one JSON command per line on stdin.
 ---
---- Install: `git clone https://github.com/ZachariahJ/WindowSwitcher.spoon ~/.hammerspoon/Spoons/WindowSwitcher.spoon`
+--- Install with SpoonInstall (see README), or `git clone https://github.com/ZachariahJ/WindowSwitcher.spoon ~/.hammerspoon/Spoons/WindowSwitcher.spoon`
+---
+--- Download: [https://github.com/ZachariahJ/WindowSwitcher.spoon/raw/main/Spoons/WindowSwitcher.spoon.zip](https://github.com/ZachariahJ/WindowSwitcher.spoon/raw/main/Spoons/WindowSwitcher.spoon.zip)
 
 -- Usage (in ~/.hammerspoon/init.lua):
 --     hs.loadSpoon("WindowSwitcher")

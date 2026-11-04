@@ -31,6 +31,20 @@
 
 ## 安装
 
+**用 [SpoonInstall](https://www.hammerspoon.org/Spoons/SpoonInstall.html)**：在 `~/.hammerspoon/init.lua` 里加上下面几行，再重载 Hammerspoon：
+
+```lua
+hs.loadSpoon("SpoonInstall")
+spoon.SpoonInstall.repos.WindowSwitcher = {
+  url = "https://github.com/ZachariahJ/WindowSwitcher.spoon",
+  desc = "WindowSwitcher.spoon",
+  branch = "main",
+}
+spoon.SpoonInstall:andUse("WindowSwitcher", { repo = "WindowSwitcher", start = true })
+```
+
+**用 git**
+
 ```sh
 git clone https://github.com/ZachariahJ/WindowSwitcher.spoon ~/.hammerspoon/Spoons/WindowSwitcher.spoon
 ```
@@ -42,8 +56,10 @@ hs.loadSpoon("WindowSwitcher")
 spoon.WindowSwitcher:start()
 ```
 
-第一次启动会编译面板小程序，Hammerspoon 会卡住几秒。
-更新时在这个文件夹里运行 `git pull` 再重载即可；只有 `glass.swift` 变了才会重新编译。
+更新时在这个文件夹里运行 `git pull`，再重载即可。
+
+两种方式第一次启动时都会编译面板小程序，Hammerspoon 会卡住几秒。
+只有 `glass.swift` 变了才会重新编译。
 
 ## 配置
 
@@ -66,6 +82,11 @@ spoon.WindowSwitcher:start()
 - `glass.swift` 只负责显示面板。Hammerspoon 自己画不出 Liquid Glass，所以用这个 AppKit 小程序来画。
   它在第一次启动时被编译成 `glass`，常驻后台，从标准输入每行接收一条 JSON 命令（`show`、`select`、`hide`）。
   Hammerspoon 重载或退出时它会自动退出。
+
+## 开发
+
+改完 Spoon 之后、提交之前，运行一次 `./build.sh`。它会重新生成 SpoonInstall 要下载的
+`docs/docs.json` 和 `Spoons/WindowSwitcher.spoon.zip`。
 
 ## 许可证
 

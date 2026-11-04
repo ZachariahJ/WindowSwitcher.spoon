@@ -31,6 +31,20 @@ Only windows on the current Space are listed.
 
 ## Install
 
+**With [SpoonInstall](https://www.hammerspoon.org/Spoons/SpoonInstall.html)** — add to `~/.hammerspoon/init.lua` and reload:
+
+```lua
+hs.loadSpoon("SpoonInstall")
+spoon.SpoonInstall.repos.WindowSwitcher = {
+  url = "https://github.com/ZachariahJ/WindowSwitcher.spoon",
+  desc = "WindowSwitcher.spoon",
+  branch = "main",
+}
+spoon.SpoonInstall:andUse("WindowSwitcher", { repo = "WindowSwitcher", start = true })
+```
+
+**With git**
+
 ```sh
 git clone https://github.com/ZachariahJ/WindowSwitcher.spoon ~/.hammerspoon/Spoons/WindowSwitcher.spoon
 ```
@@ -42,8 +56,10 @@ hs.loadSpoon("WindowSwitcher")
 spoon.WindowSwitcher:start()
 ```
 
-The first start compiles the panel helper, which freezes Hammerspoon for a few seconds.
-To update, `git pull` in that folder and reload; it recompiles only if `glass.swift` changed.
+To update, `git pull` in that folder and reload.
+
+Either way, the first start compiles the panel helper, which freezes Hammerspoon for a few seconds.
+It only recompiles when `glass.swift` changes.
 
 ## Configuration
 
@@ -66,6 +82,11 @@ clear or tinted glass, sizes, panel position (`glass.swift`).
 - `glass.swift` only draws the panel. Hammerspoon can't create Liquid Glass itself, so this small AppKit program does it.
   It's compiled to `glass` on first start, runs in the background, and gets one JSON command per line on stdin
   (`show`, `select`, `hide`). It exits when Hammerspoon reloads or quits.
+
+## Development
+
+After changing the Spoon, run `./build.sh` before committing. It regenerates `docs/docs.json` and
+`Spoons/WindowSwitcher.spoon.zip`, which SpoonInstall downloads.
 
 ## License
 
