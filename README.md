@@ -1,5 +1,7 @@
 # WindowSwitcher.spoon
 
+English | [简体中文](README.zh-CN.md)
+
 Windows-style Alt+Tab for macOS, as a [Hammerspoon](https://www.hammerspoon.org) Spoon.
 **Cmd+Tab switches between windows, not apps**, on a native Liquid Glass panel.
 
