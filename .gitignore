@@ -1,0 +1,5 @@
+# Build outputs: compiled on each user's machine on first start
+glass
+glass.sha256
+
+.DS_Store
