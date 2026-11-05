@@ -32,7 +32,7 @@ local types = hs.eventtap.event.types
 local TAB = hs.keycodes.map.tab
 local ESC = hs.keycodes.map.escape
 
--- 1. Spoon metadata
+-- Spoon metadata
 local obj = {}
 obj.__index = obj
 obj.name = "WindowSwitcher"
@@ -41,7 +41,7 @@ obj.author = "ZachariahJ"
 obj.homepage = "https://github.com/ZachariahJ/WindowSwitcher.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
--- 2. Settings
+-- Settings
 
 --- WindowSwitcher.delay
 --- Variable
@@ -66,7 +66,7 @@ local STAMP = hs.spoons.resourcePath("glass.sha256")
 --          (this also lets in things like the Teams notification center or Zoom's floating button)
 local wf = hs.window.filter.new():setCurrentSpace(true):setDefaultFilter{ allowRoles = "AXStandardWindow" }
 
--- 3. Build glass
+-- Build glass
 -- Recompile when glass is missing or glass.swift changed. Changes are detected by content hash
 -- rather than modification time, because unzipping an update can leave the source "older" than the old binary.
 -- Hammerspoon freezes for a few seconds while compiling; this only happens on first run or after an update.
@@ -94,7 +94,7 @@ local function build()
   return true
 end
 
--- 4. Talk to glass
+-- Talk to glass
 -- One JSON object per line on its stdin, e.g. {"cmd":"select","sel":2}
 local function send(t)
   if obj.task and obj.task:isRunning() then
@@ -102,13 +102,13 @@ local function send(t)
   end
 end
 
--- 5. State
+-- State
 obj.windows = nil  -- window list while switching; nil when not switching
 obj.index = nil    -- selected window (Lua index, starts at 1; glass gets index - 1)
 obj.timer = nil    -- delay before showing the panel
 obj.shown = false  -- whether glass is currently showing the panel
 
--- 6. step(dir): move the selection by dir (+1 / -1)
+-- step(dir): move the selection by dir (+1 / -1)
 -- First call: grab the window list and start the delay timer; when it fires, send "show".
 -- Every call: move the selection, wrapping around; if the panel is visible, send "select".
 --
@@ -144,7 +144,7 @@ local function step(dir)
   if obj.shown then send({ cmd = "select", sel = obj.index - 1 }) end
 end
 
--- 7. finish(focus): stop switching
+-- finish(focus): stop switching
 -- Stop the timer, hide the panel, and if focus is true, focus the selected window.
 local function finish(focus)
   if obj.timer then obj.timer:stop() end
@@ -154,7 +154,24 @@ local function finish(focus)
   if win then win:focus() end
 end
 
--- 8. Key interception
+-- Mouse
+-- glass prints {"event":"click","sel":N} on stdout when a cell is clicked (sel starts at 0);
+-- that switches to the window, like releasing Cmd on it. The hover box is drawn by glass alone.
+--
+-- Example: a click only moves the selection (releasing Cmd switches) → replace the two lines in the if with
+--     obj.index = m.sel + 1; send({ cmd = "select", sel = m.sel })
+local function onOutput(_, out)
+  for line in (out or ""):gmatch("[^\n]+") do
+    local ok, m = pcall(hs.json.decode, line)
+    if ok and type(m) == "table" and m.event == "click" and obj.windows and obj.windows[m.sel + 1] then
+      obj.index = m.sel + 1
+      finish(true)
+    end
+  end
+  return true
+end
+
+-- Key interception
 -- macOS reserves Cmd+Tab, so hs.hotkey can't bind it; an eventtap can.
 --   Cmd+Tab / Cmd+Shift+Tab   → step(±1) and swallow the key (the system switcher never appears)
 --   Esc while switching       → cancel
@@ -185,7 +202,7 @@ obj.tap = hs.eventtap.new({ types.keyDown, types.flagsChanged }, function(e)
   return false
 end)
 
--- 9. start / stop
+-- start / stop
 
 --- WindowSwitcher:start()
 --- Method
@@ -206,10 +223,10 @@ function obj:start()
   end
   if not build() then return self end
   -- The third argument (a streaming callback) is required: without it, hs.task closes
-  -- stdin after the first write, and glass exits on EOF.
+  -- stdin after the first write, and glass exits on EOF. It also receives glass's stdout (clicks).
   self.task = hs.task.new(BIN, function(code)
     print("WindowSwitcher: glass exited, code = " .. tostring(code))
-  end, function() return true end)
+  end, onOutput)
   self.task:start()
   self.tap:start()
   return self

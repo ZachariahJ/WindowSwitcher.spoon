@@ -1,12 +1,13 @@
-// glass.swift — the WindowSwitcher panel. Display only, using native Liquid Glass (NSGlassEffectView, macOS 26+).
+// glass.swift — the WindowSwitcher panel, using native Liquid Glass (NSGlassEffectView, macOS 26+).
 // init.lua compiles this to `glass`, launches it with hs.task, and sends commands on stdin.
-// Keys and window switching are handled in init.lua, not here.
+// glass draws the panel and reports clicks on stdout; keys and window switching are in init.lua.
 //
 // After editing this file, reload Hammerspoon and it recompiles automatically (takes a few seconds).
 //
 // Try it by hand: in Terminal, cd into this folder, run ./glass, then paste a line and press Return:
 //     {"cmd":"show","sel":0,"items":[{"id":"com.apple.finder","title":"Finder"},{"id":"com.apple.Safari","title":"Safari"}]}
 //   Then try {"cmd":"select","sel":1} and {"cmd":"hide"}. Ctrl+D quits.
+//   Hover a cell to see the hover box; clicking one prints {"event":"click","sel":N}.
 
 import AppKit
 
@@ -40,15 +41,42 @@ enum Style {
 struct Item: Decodable { let id: String; let title: String }
 struct Message: Decodable { let cmd: String; let sel: Int?; let screen: Int?; let items: [Item]? }
 
+// MARK: - Mouse
+// The view holding the cells; it takes every mouse event in the panel (so icons and labels don't
+// swallow clicks) and passes the position on: onMove (nil = mouse left), onClick.
+// glass is never the active app, hence acceptsFirstMouse and .activeAlways.
+final class Cells: NSView {
+    var onMove: ((NSPoint?) -> Void)?
+    var onClick: ((NSPoint) -> Void)?
+
+    override func hitTest(_ point: NSPoint) -> NSView? { frame.contains(point) ? self : nil }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseMoved, .mouseEnteredAndExited,
+                                                               .activeAlways, .inVisibleRect],
+                                       owner: self))
+    }
+
+    override func mouseMoved(with e: NSEvent) { onMove?(convert(e.locationInWindow, from: nil)) }
+    override func mouseExited(with e: NSEvent) { onMove?(nil) }
+    override func mouseDown(with e: NSEvent) { onClick?(convert(e.locationInWindow, from: nil)) }
+}
+
 final class Switcher {
     // MARK: - Panel
-    // A borderless, non-activating, transparent, click-through NSPanel at .popUpMenu level, on all Spaces.
-    // Its contentView is an NSGlassEffectView; the cells and the selection box go inside the glass.
+    // A borderless, non-activating, transparent NSPanel at .popUpMenu level, on all Spaces.
+    // Its contentView is an NSGlassEffectView; the cells and the two boxes go inside the glass:
+    // highlight = the Cmd+Tab selection, hover = fainter box under the mouse (doesn't change the selection).
+    // A click prints {"event":"click","sel":N} on stdout for init.lua.
     let panel = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
                         backing: .buffered, defer: false)
     let glass = NSGlassEffectView()
-    let content = NSView()
+    let content = Cells()
     let highlight = NSView()
+    let hover = NSView()
     var cards: [NSRect] = []
     var icons: [String: NSImage] = [:]
 
@@ -56,11 +84,12 @@ final class Switcher {
     // Example: tinted glass → add glass.tintColor = NSColor.systemPurple.withAlphaComponent(0.2)
     // Example: blue selection box → change the highlight backgroundColor to
     //          NSColor.systemBlue.withAlphaComponent(0.35).cgColor
+    // Example: stronger hover box → raise hover's 0.08 / 0.18 (keep below highlight's 0.18 / 0.35)
+    // Example: no mouse at all → add panel.ignoresMouseEvents = true
     init() {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = false               // the glass draws its own shadow
-        panel.ignoresMouseEvents = true
         panel.level = .popUpMenu
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
 
@@ -68,12 +97,31 @@ final class Switcher {
         glass.contentView = content
         panel.contentView = glass
 
-        highlight.wantsLayer = true
-        highlight.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.18).cgColor
-        highlight.layer?.borderColor = NSColor.white.withAlphaComponent(0.35).cgColor
-        highlight.layer?.borderWidth = 1
-        highlight.layer?.cornerCurve = .continuous
+        for (box, fill, border) in [(highlight, 0.18, 0.35), (hover, 0.08, 0.18)] {
+            box.wantsLayer = true
+            box.layer?.backgroundColor = NSColor.white.withAlphaComponent(fill).cgColor
+            box.layer?.borderColor = NSColor.white.withAlphaComponent(border).cgColor
+            box.layer?.borderWidth = 1
+            box.layer?.cornerCurve = .continuous
+        }
+
+        content.onMove = { [unowned self] p in
+            if let i = p.flatMap(card(at:)) {
+                hover.frame = cards[i]
+                hover.isHidden = false
+            } else {
+                hover.isHidden = true
+            }
+        }
+        content.onClick = { [unowned self] p in
+            guard let i = card(at: p) else { return }
+            print("{\"event\":\"click\",\"sel\":\(i)}")
+            fflush(stdout)  // stdout is a pipe; without this the line sits in a buffer
+        }
     }
+
+    // Index of the cell under point p, or nil for padding and gaps.
+    func card(at p: NSPoint) -> Int? { cards.firstIndex { $0.contains(p) } }
 
     // MARK: - App icons
     // Look up the icon by bundle ID (NSWorkspace) and cache it.
@@ -113,8 +161,9 @@ final class Switcher {
                        display: false)
         glass.cornerRadius = r
         content.frame = NSRect(x: 0, y: 0, width: w, height: h)
-        content.subviews = [highlight]
-        highlight.layer?.cornerRadius = max(r - pad, 4)
+        content.subviews = [hover, highlight]   // hover first so it sits below the selection box
+        hover.isHidden = true                    // appears once the mouse moves over a cell
+        for box in [highlight, hover] { box.layer?.cornerRadius = max(r - pad, 4) }
 
         cards = []
         for (i, item) in items.enumerated() {
