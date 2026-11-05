@@ -29,14 +29,16 @@ enum Style {
 
 // MARK: - Messages
 // One JSON object per line on stdin:
-//   {"cmd":"show","sel":1,"items":[{"id":"<bundleID>","title":"..."}]}
+//   {"cmd":"show","sel":1,"screen":69734208,"items":[{"id":"<bundleID>","title":"..."}]}
 //   {"cmd":"select","sel":2}      // sel starts at 0
 //   {"cmd":"hide"}
+// "screen" is the display ID (hs.screen:id() in Lua) to show the panel on; if missing or unknown,
+// the panel goes on the main screen.
 //
 // Example: send an extra field from Lua (say, the app name) → add `let app: String` to Item,
 //          and add app = ... to each item in init.lua's "show" message
 struct Item: Decodable { let id: String; let title: String }
-struct Message: Decodable { let cmd: String; let sel: Int?; let items: [Item]? }
+struct Message: Decodable { let cmd: String; let sel: Int?; let screen: Int?; let items: [Item]? }
 
 final class Switcher {
     // MARK: - Panel
@@ -86,20 +88,19 @@ final class Switcher {
     }
 
     // MARK: - show
-    // Size the panel for the number of windows and center it on the screen under the mouse.
+    // Size the panel for the number of windows and center it on the screen whose display ID
+    // Lua sent (the screen of the focused window; init.lua picks it).
     // One cell per window: icon + one-line title (truncated at the end).
     // Place the selection box, then fade in.
     //
-    // Example: always use the main screen (the one with the menu bar) → replace the screen line with
-    //     guard let screen = NSScreen.screens.first else { return }
+    // Example: which screen is chosen is decided in init.lua (see the examples above step()), not here
     // Example: panel a bit higher (like Spotlight) → in setFrame, change y's `/ 2` to `* 0.6`
     //   (AppKit's origin is bottom-left, so bigger y is higher)
     // Example: icons only, no titles → delete the NSTextField block and make cardH smaller
-    func show(_ items: [Item], sel: Int) {
-        let mouse = NSEvent.mouseLocation
-        guard !items.isEmpty,
-              let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main
-        else { return }
+    func show(_ items: [Item], sel: Int, screenID: Int?) {
+        let key = NSDeviceDescriptionKey("NSScreenNumber")
+        let target = NSScreen.screens.first { ($0.deviceDescription[key] as? NSNumber)?.intValue == screenID }
+        guard !items.isEmpty, let screen = target ?? NSScreen.main else { return }
         let sf = screen.visibleFrame
         let n = CGFloat(items.count)
         let s = min(1, (sf.width * 0.9 - 2 * Style.pad + Style.gap) / (n * (Style.cardW + Style.gap)))
@@ -157,7 +158,7 @@ final class Switcher {
 
     func handle(_ m: Message) {
         switch m.cmd {
-        case "show": show(m.items ?? [], sel: m.sel ?? 0)
+        case "show": show(m.items ?? [], sel: m.sel ?? 0, screenID: m.screen)
         case "select": select(m.sel ?? 0)
         case "hide": hide()
         default: break
