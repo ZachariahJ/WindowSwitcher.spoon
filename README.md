@@ -20,8 +20,10 @@ Windows-style Alt+Tab for macOS, as a [Hammerspoon](https://www.hammerspoon.org)
 | Cmd+Shift+Tab | Previous window |
 | Release Cmd | Switch to the selected window |
 | Esc | Cancel |
+| Hover a window | Marks it with a fainter box (the Cmd+Tab selection doesn't move) |
+| Click a window | Switch to it |
 
-Only windows on the current Space are listed.
+Only windows on the current Space are listed. The panel appears on the display under the mouse.
 
 ## Requirements
 
@@ -72,16 +74,17 @@ spoon.WindowSwitcher:start()
 `spoon.WindowSwitcher:stop()` gives you the system Cmd+Tab back.
 
 More tweaks are documented as comments in the source, with examples:
-Alt+Tab instead of Cmd+Tab, arrow keys, all Spaces, hiding apps (`init.lua`);
+Alt+Tab instead of Cmd+Tab, arrow keys, all Spaces, hiding apps, which display the panel appears on (`init.lua`);
 clear or tinted glass, sizes, panel position (`glass.swift`).
 
 ## How it works
 
 - `init.lua` does the logic. macOS reserves Cmd+Tab, so it is caught with an `hs.eventtap`.
   Windows come from `hs.window.filter`, sorted by most recent use, and releasing Cmd focuses the selected one.
-- `glass.swift` only draws the panel. Hammerspoon can't create Liquid Glass itself, so this small AppKit program does it.
+- `glass.swift` draws the panel. Hammerspoon can't create Liquid Glass itself, so this small AppKit program does it.
   It's compiled to `glass` on first start, runs in the background, and gets one JSON command per line on stdin
-  (`show`, `select`, `hide`). It exits when Hammerspoon reloads or quits.
+  (`show`, `select`, `hide`). Clicks go back to `init.lua` the same way, one JSON line on stdout.
+  It exits when Hammerspoon reloads or quits.
 
 ## Development
 

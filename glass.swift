@@ -137,7 +137,7 @@ final class Switcher {
 
     // MARK: - show
     // Size the panel for the number of windows and center it on the screen whose display ID
-    // Lua sent (the screen of the focused window; init.lua picks it).
+    // Lua sent (init.lua picks it).
     // One cell per window: icon + one-line title (truncated at the end).
     // Place the selection box, then fade in.
     //

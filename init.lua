@@ -36,7 +36,7 @@ local ESC = hs.keycodes.map.escape
 local obj = {}
 obj.__index = obj
 obj.name = "WindowSwitcher"
-obj.version = "1.0.1"
+obj.version = "1.1.0"
 obj.author = "ZachariahJ"
 obj.homepage = "https://github.com/ZachariahJ/WindowSwitcher.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
@@ -112,13 +112,12 @@ obj.shown = false  -- whether glass is currently showing the panel
 -- First call: grab the window list and start the delay timer; when it fires, send "show".
 -- Every call: move the selection, wrapping around; if the panel is visible, send "select".
 --
--- The panel goes on the screen of the focused window (or the screen under the mouse if nothing is focused).
--- glass gets that screen's display ID; it can't work this out itself, since it's a background process
--- whose idea of the "main" screen is always the primary display.
+-- The panel goes on the screen under the mouse; glass gets that screen's display ID.
 --
 -- Example: show something else for untitled windows (e.g. "(untitled)") → change app:name() in the title line
--- Example: always show on the screen under the mouse → change the screen line to
---     local screen = hs.mouse.getCurrentScreen()
+-- Example: show on the focused window's screen instead → change the screen line to
+--     local focused = hs.window.focusedWindow()
+--     local screen = focused and focused:screen() or hs.mouse.getCurrentScreen()
 -- Example: always show on the primary display (the one with the menu bar) → change the screen line to
 --     local screen = hs.screen.primaryScreen()
 local function step(dir)
@@ -134,8 +133,7 @@ local function step(dir)
         if title == "" and app then title = app:name() end
         items[i] = { id = app and app:bundleID() or "", title = title }
       end
-      local focused = hs.window.focusedWindow()
-      local screen = focused and focused:screen() or hs.mouse.getCurrentScreen()
+      local screen = hs.mouse.getCurrentScreen()
       send({ cmd = "show", sel = obj.index - 1, screen = screen and screen:id(), items = items })
       obj.shown = true
     end)

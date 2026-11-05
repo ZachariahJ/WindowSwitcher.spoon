@@ -20,8 +20,10 @@
 | Cmd+Shift+Tab | 上一个窗口 |
 | 松开 Cmd | 切到选中的窗口 |
 | Esc | 取消 |
+| 鼠标悬停在窗口上 | 用更淡的框标出（不改变 Cmd+Tab 的选中） |
+| 鼠标点击窗口 | 直接切到这个窗口 |
 
-只列出当前桌面（Space）上的窗口。
+只列出当前桌面（Space）上的窗口。面板出现在鼠标所在的显示器上。
 
 ## 系统要求
 
@@ -72,15 +74,16 @@ spoon.WindowSwitcher:start()
 运行 `spoon.WindowSwitcher:stop()` 可以换回系统自带的 Cmd+Tab。
 
 源码注释里有更多改法和示例：
-改成 Alt+Tab、用方向键移动、列出所有桌面的窗口、排除某个应用（见 `init.lua`）；
+改成 Alt+Tab、用方向键移动、列出所有桌面的窗口、排除某个应用、面板出现在哪块显示器（见 `init.lua`）；
 更通透或带颜色的玻璃、尺寸、面板位置（见 `glass.swift`）。
 
 ## 原理
 
 - `init.lua` 负责所有逻辑。macOS 占用了 Cmd+Tab，所以用 `hs.eventtap` 拦截。
   窗口列表来自 `hs.window.filter`，按最近使用排序，松开 Cmd 时聚焦选中的窗口。
-- `glass.swift` 只负责显示面板。Hammerspoon 自己画不出 Liquid Glass，所以用这个 AppKit 小程序来画。
+- `glass.swift` 负责显示面板。Hammerspoon 自己画不出 Liquid Glass，所以用这个 AppKit 小程序来画。
   它在第一次启动时被编译成 `glass`，常驻后台，从标准输入每行接收一条 JSON 命令（`show`、`select`、`hide`）。
+  鼠标点击也用同样的方式传回 `init.lua`：往标准输出写一行 JSON。
   Hammerspoon 重载或退出时它会自动退出。
 
 ## 开发

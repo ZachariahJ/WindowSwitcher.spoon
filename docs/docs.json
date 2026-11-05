@@ -11,16 +11,14 @@
     ],
     "Variable" : [
       {
-        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
+        "name" : "delay",
+        "desc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
         "stripped_doc" : [
           "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
           "A tap shorter than this switches to the previous window without showing the panel.",
           ""
         ],
-        "desc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
-        "parameters" : [
-
-        ],
+        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
         "notes" : [
           " * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`"
         ],
@@ -29,8 +27,10 @@
         "returns" : [
 
         ],
-        "name" : "delay",
-        "def" : "WindowSwitcher.delay"
+        "def" : "WindowSwitcher.delay",
+        "parameters" : [
+
+        ]
       }
     ],
     "stripped_doc" : [
@@ -39,24 +39,21 @@
     "Deprecated" : [
 
     ],
-    "desc" : "Windows-style Alt+Tab for macOS: Cmd+Tab switches between windows on a native Liquid Glass panel.",
     "type" : "Module",
+    "desc" : "Windows-style Alt+Tab for macOS: Cmd+Tab switches between windows on a native Liquid Glass panel.",
     "Constructor" : [
 
     ],
-    "doc" : "Windows-style Alt+Tab for macOS: Cmd+Tab switches between windows on a native Liquid Glass panel.\n\nIt switches *windows*, not apps, so two windows of the same app are separate entries.\nThe panel is a real `NSGlassEffectView` (macOS 26+), not an imitation.\n\nKeys:\n * Cmd+Tab        - next window (the first press selects the previously used window)\n * Cmd+Shift+Tab  - previous window\n * release Cmd    - switch to the selected window\n * Esc            - cancel\n\nA quick Cmd+Tab tap switches straight back to the previous window without showing the panel.\n\nHow it works: this file does all the logic (key interception, window list, focusing).\n`glass.swift` only draws the panel. It is compiled to `glass` on first start\n(needs Xcode Command Line Tools), runs in the background, and takes one JSON command per line on stdin.\n\nInstall with SpoonInstall (see README), or `git clone https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon ~\/.hammerspoon\/Spoons\/WindowSwitcher.spoon`\n\nDownload: [https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon\/raw\/main\/Spoons\/WindowSwitcher.spoon.zip](https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon\/raw\/main\/Spoons\/WindowSwitcher.spoon.zip)",
     "items" : [
       {
-        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
+        "name" : "delay",
+        "desc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
         "stripped_doc" : [
           "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
           "A tap shorter than this switches to the previous window without showing the panel.",
           ""
         ],
-        "desc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
-        "parameters" : [
-
-        ],
+        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
         "notes" : [
           " * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`"
         ],
@@ -65,20 +62,19 @@
         "returns" : [
 
         ],
-        "name" : "delay",
-        "def" : "WindowSwitcher.delay"
+        "def" : "WindowSwitcher.delay",
+        "parameters" : [
+
+        ]
       },
       {
-        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
+        "name" : "start",
+        "desc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
         "stripped_doc" : [
           "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
           ""
         ],
-        "desc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
-        "parameters" : [
-          " * None",
-          ""
-        ],
+        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
         "notes" : [
           " * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`)."
         ],
@@ -88,20 +84,20 @@
           " * The WindowSwitcher object",
           ""
         ],
-        "name" : "start",
-        "def" : "WindowSwitcher:start()"
+        "def" : "WindowSwitcher:start()",
+        "parameters" : [
+          " * None",
+          ""
+        ]
       },
       {
-        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
+        "name" : "stop",
+        "desc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
         "stripped_doc" : [
           "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
           ""
         ],
-        "desc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
-        "parameters" : [
-          " * None",
-          ""
-        ],
+        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
         "notes" : [
 
         ],
@@ -110,63 +106,67 @@
         "returns" : [
           " * The WindowSwitcher object"
         ],
+        "def" : "WindowSwitcher:stop()",
+        "parameters" : [
+          " * None",
+          ""
+        ]
+      }
+    ],
+    "Method" : [
+      {
+        "name" : "start",
+        "desc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
+        "stripped_doc" : [
+          "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
+          ""
+        ],
+        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
+        "notes" : [
+          " * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`)."
+        ],
+        "signature" : "WindowSwitcher:start()",
+        "type" : "Method",
+        "returns" : [
+          " * The WindowSwitcher object",
+          ""
+        ],
+        "def" : "WindowSwitcher:start()",
+        "parameters" : [
+          " * None",
+          ""
+        ]
+      },
+      {
         "name" : "stop",
-        "def" : "WindowSwitcher:stop()"
+        "desc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
+        "stripped_doc" : [
+          "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
+          ""
+        ],
+        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
+        "notes" : [
+
+        ],
+        "signature" : "WindowSwitcher:stop()",
+        "type" : "Method",
+        "returns" : [
+          " * The WindowSwitcher object"
+        ],
+        "def" : "WindowSwitcher:stop()",
+        "parameters" : [
+          " * None",
+          ""
+        ]
       }
     ],
     "Command" : [
 
     ],
-    "Method" : [
-      {
-        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
-        "stripped_doc" : [
-          "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
-          ""
-        ],
-        "desc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "notes" : [
-          " * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`)."
-        ],
-        "signature" : "WindowSwitcher:start()",
-        "type" : "Method",
-        "returns" : [
-          " * The WindowSwitcher object",
-          ""
-        ],
-        "name" : "start",
-        "def" : "WindowSwitcher:start()"
-      },
-      {
-        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
-        "stripped_doc" : [
-          "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
-          ""
-        ],
-        "desc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "notes" : [
-
-        ],
-        "signature" : "WindowSwitcher:stop()",
-        "type" : "Method",
-        "returns" : [
-          " * The WindowSwitcher object"
-        ],
-        "name" : "stop",
-        "def" : "WindowSwitcher:stop()"
-      }
-    ],
     "Field" : [
 
     ],
+    "doc" : "Windows-style Alt+Tab for macOS: Cmd+Tab switches between windows on a native Liquid Glass panel.\n\nIt switches *windows*, not apps, so two windows of the same app are separate entries.\nThe panel is a real `NSGlassEffectView` (macOS 26+), not an imitation.\n\nKeys:\n * Cmd+Tab        - next window (the first press selects the previously used window)\n * Cmd+Shift+Tab  - previous window\n * release Cmd    - switch to the selected window\n * Esc            - cancel\n\nA quick Cmd+Tab tap switches straight back to the previous window without showing the panel.\n\nHow it works: this file does all the logic (key interception, window list, focusing).\n`glass.swift` only draws the panel. It is compiled to `glass` on first start\n(needs Xcode Command Line Tools), runs in the background, and takes one JSON command per line on stdin.\n\nInstall with SpoonInstall (see README), or `git clone https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon ~\/.hammerspoon\/Spoons\/WindowSwitcher.spoon`\n\nDownload: [https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon\/raw\/main\/Spoons\/WindowSwitcher.spoon.zip](https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon\/raw\/main\/Spoons\/WindowSwitcher.spoon.zip)",
     "name" : "WindowSwitcher"
   }
 ]
