@@ -8,7 +8,7 @@ Windows-style Alt+Tab for macOS, as a [Hammerspoon](https://www.hammerspoon.org)
 ![WindowSwitcher panel](screenshot.png)
 
 - Two windows of the same app are separate entries, so you can jump straight to the one you want.
-- Most recently used first: a quick Cmd+Tab tap goes back to the previous window without showing the panel.
+- Most recently used first, minimized windows last: a quick Cmd+Tab tap goes back to the previous window without showing the panel.
 - The panel is a real `NSGlassEffectView` (macOS 26 Liquid Glass), not an imitation.
 - Window thumbnails, ready the moment the panel opens (can be turned off). Pressing Cmd+Tab captures the current window,
   a window is also captured when it loses focus, and all windows every 5 minutes; thumbnails are kept in memory only.

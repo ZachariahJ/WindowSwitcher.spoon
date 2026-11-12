@@ -37,7 +37,7 @@ local ESC = hs.keycodes.map.escape
 local obj = {}
 obj.__index = obj
 obj.name = "WindowSwitcher"
-obj.version = "1.2.0"
+obj.version = "1.2.1"
 obj.author = "ZachariahJ"
 obj.homepage = "https://github.com/ZachariahJ/WindowSwitcher.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
@@ -73,13 +73,17 @@ local BIN = hs.spoons.resourcePath("glass")
 local STAMP = hs.spoons.resourcePath("glass.sha256")
 
 -- Which windows to list: normal windows on the current Space, most recently used first.
+-- AXDialog is let in here only for minimized windows: some apps (Microsoft Word) report a minimized
+-- window as AXDialog instead of AXStandardWindow. step() then drops dialogs that aren't minimized.
+-- Check a window's role in the Console: hs.window.focusedWindow():subrole()
 --
 -- Example: list windows from all Spaces (picking one jumps to its Space) → change
 --          setCurrentSpace(true) to setCurrentSpace(nil)
 -- Example: hide an app → append :rejectApp("Finder")
--- Example: also list dialogs (preferences windows, pop-ups) → change allowRoles to "*"
+-- Example: also list dialogs (preferences windows, pop-ups) → change allowRoles to "*" and, in step(),
+--          change `elseif win:subrole() == "AXStandardWindow" then` to `else`
 --          (this also lets in things like the Teams notification center or Zoom's floating button)
-local wf = hs.window.filter.new():setCurrentSpace(true):setDefaultFilter{ allowRoles = "AXStandardWindow" }
+local wf = hs.window.filter.new():setCurrentSpace(true):setDefaultFilter{ allowRoles = {"AXStandardWindow", "AXDialog"} }
 
 -- Build glass
 -- Recompile when glass is missing or glass.swift changed. Changes are detected by content hash
@@ -170,7 +174,21 @@ obj.shown = false  -- whether glass is currently showing the panel
 --     local screen = hs.screen.primaryScreen()
 local function step(dir)
   if not obj.windows then
-    obj.windows = wf:getWindows(hs.window.filter.sortByFocusedLast)
+    -- Minimized windows go to the end of the list; each group keeps its most-recently-used order.
+    -- Dialogs that aren't minimized are dropped (see the window filter above for why they get this far).
+    -- Example: also move hidden windows (Cmd+H) to the end → change win:isMinimized() to not win:isVisible()
+    -- Example: plain MRU order, minimized windows mixed in → change `table.insert(minimized, win)`
+    --          to `table.insert(windows, win)`
+    local windows, minimized = {}, {}
+    for _, win in ipairs(wf:getWindows(hs.window.filter.sortByFocusedLast)) do
+      if win:isMinimized() then
+        table.insert(minimized, win)
+      elseif win:subrole() == "AXStandardWindow" then
+        table.insert(windows, win)
+      end
+    end
+    table.move(minimized, 1, #minimized, #windows + 1, windows)
+    obj.windows = windows
     if #obj.windows == 0 then obj.windows = nil return end
     obj.index = 1
     if obj.preview == 1 then snap({ obj.windows[1] }) end  -- the current window, as you leave it

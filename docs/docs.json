@@ -11,6 +11,7 @@
     ],
     "Variable" : [
       {
+        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
         "desc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
         "parameters" : [
 
@@ -20,7 +21,6 @@
           "A tap shorter than this switches to the previous window without showing the panel.",
           ""
         ],
-        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
         "notes" : [
           " * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`"
         ],
@@ -33,6 +33,7 @@
         "name" : "delay"
       },
       {
+        "doc" : "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.\n\nNotes:\n * Thumbnails come from a cache, so the panel shows them instantly: pressing Cmd+Tab captures the\n   current window, any window is captured when it loses focus (mouse click, Dock...), and all windows on\n   the current Space at start and every 300 s. They are kept in memory only.\n * Needs Screen Recording permission for Hammerspoon (System Settings → Privacy & Security → Screen Recording).\n   Without it, or for a window not captured yet, the cell shows the app icon instead.\n * Example: icons only, like before → `spoon.WindowSwitcher.preview = 0` before `:start()`\n * Example: change it later → change the value and reload (capturing is set up in `:start()`)",
         "desc" : "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.",
         "parameters" : [
 
@@ -41,7 +42,6 @@
           "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.",
           ""
         ],
-        "doc" : "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.\n\nNotes:\n * Thumbnails come from a cache, so the panel shows them instantly: pressing Cmd+Tab captures the\n   current window, any window is captured when it loses focus (mouse click, Dock...), and all windows on\n   the current Space at start and every 300 s. They are kept in memory only.\n * Needs Screen Recording permission for Hammerspoon (System Settings → Privacy & Security → Screen Recording).\n   Without it, or for a window not captured yet, the cell shows the app icon instead.\n * Example: icons only, like before → `spoon.WindowSwitcher.preview = 0` before `:start()`\n * Example: change it later → change the value and reload (capturing is set up in `:start()`)",
         "notes" : [
           " * Thumbnails come from a cache, so the panel shows them instantly: pressing Cmd+Tab captures the",
           "   current window, any window is captured when it loses focus (mouse click, Dock...), and all windows on",
@@ -63,17 +63,18 @@
     "stripped_doc" : [
 
     ],
-    "desc" : "Windows-style Alt+Tab for macOS: Cmd+Tab switches between windows on a native Liquid Glass panel.",
     "Deprecated" : [
 
     ],
     "type" : "Module",
+    "desc" : "Windows-style Alt+Tab for macOS: Cmd+Tab switches between windows on a native Liquid Glass panel.",
     "Constructor" : [
 
     ],
     "doc" : "Windows-style Alt+Tab for macOS: Cmd+Tab switches between windows on a native Liquid Glass panel.\n\nIt switches *windows*, not apps, so two windows of the same app are separate entries.\nThe panel is a real `NSGlassEffectView` (macOS 26+), not an imitation.\n\nKeys:\n * Cmd+Tab        - next window (the first press selects the previously used window)\n * Cmd+Shift+Tab  - previous window\n * release Cmd    - switch to the selected window\n * Esc            - cancel\n\nA quick Cmd+Tab tap switches straight back to the previous window without showing the panel.\nEach cell shows a thumbnail of its window, as you last left it (turn off with `WindowSwitcher.preview = 0`).\n\nHow it works: this file does all the logic (key interception, window list, focusing).\n`glass.swift` only draws the panel. It is compiled to `glass` on first start\n(needs Xcode Command Line Tools), runs in the background, and takes one JSON command per line on stdin.\n\nInstall with SpoonInstall (see README), or `git clone https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon ~\/.hammerspoon\/Spoons\/WindowSwitcher.spoon`\n\nDownload: [https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon\/raw\/main\/Spoons\/WindowSwitcher.spoon.zip](https:\/\/github.com\/ZachariahJ\/WindowSwitcher.spoon\/raw\/main\/Spoons\/WindowSwitcher.spoon.zip)",
     "Method" : [
       {
+        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
         "desc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
         "parameters" : [
           " * None",
@@ -83,7 +84,6 @@
           "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
           ""
         ],
-        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
         "notes" : [
           " * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`)."
         ],
@@ -97,6 +97,7 @@
         "name" : "start"
       },
       {
+        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
         "desc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
         "parameters" : [
           " * None",
@@ -106,7 +107,6 @@
           "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
           ""
         ],
-        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
         "notes" : [
 
         ],
@@ -119,11 +119,15 @@
         "name" : "stop"
       }
     ],
+    "Command" : [
+
+    ],
     "Field" : [
 
     ],
     "items" : [
       {
+        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
         "desc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.",
         "parameters" : [
 
@@ -133,7 +137,6 @@
           "A tap shorter than this switches to the previous window without showing the panel.",
           ""
         ],
-        "doc" : "Seconds Cmd+Tab must be held before the panel appears. Default `0.12`.\nA tap shorter than this switches to the previous window without showing the panel.\n\nNotes:\n * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`",
         "notes" : [
           " * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`"
         ],
@@ -146,6 +149,7 @@
         "name" : "delay"
       },
       {
+        "doc" : "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.\n\nNotes:\n * Thumbnails come from a cache, so the panel shows them instantly: pressing Cmd+Tab captures the\n   current window, any window is captured when it loses focus (mouse click, Dock...), and all windows on\n   the current Space at start and every 300 s. They are kept in memory only.\n * Needs Screen Recording permission for Hammerspoon (System Settings → Privacy & Security → Screen Recording).\n   Without it, or for a window not captured yet, the cell shows the app icon instead.\n * Example: icons only, like before → `spoon.WindowSwitcher.preview = 0` before `:start()`\n * Example: change it later → change the value and reload (capturing is set up in `:start()`)",
         "desc" : "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.",
         "parameters" : [
 
@@ -154,7 +158,6 @@
           "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.",
           ""
         ],
-        "doc" : "`1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.\n\nNotes:\n * Thumbnails come from a cache, so the panel shows them instantly: pressing Cmd+Tab captures the\n   current window, any window is captured when it loses focus (mouse click, Dock...), and all windows on\n   the current Space at start and every 300 s. They are kept in memory only.\n * Needs Screen Recording permission for Hammerspoon (System Settings → Privacy & Security → Screen Recording).\n   Without it, or for a window not captured yet, the cell shows the app icon instead.\n * Example: icons only, like before → `spoon.WindowSwitcher.preview = 0` before `:start()`\n * Example: change it later → change the value and reload (capturing is set up in `:start()`)",
         "notes" : [
           " * Thumbnails come from a cache, so the panel shows them instantly: pressing Cmd+Tab captures the",
           "   current window, any window is captured when it loses focus (mouse click, Dock...), and all windows on",
@@ -173,6 +176,7 @@
         "name" : "preview"
       },
       {
+        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
         "desc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
         "parameters" : [
           " * None",
@@ -182,7 +186,6 @@
           "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.",
           ""
         ],
-        "doc" : "Compiles the panel helper if needed, launches it, and starts intercepting Cmd+Tab.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object\n\nNotes:\n * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`).",
         "notes" : [
           " * Requires macOS 26 or later (Liquid Glass) and Xcode Command Line Tools (to compile `glass.swift`)."
         ],
@@ -196,6 +199,7 @@
         "name" : "start"
       },
       {
+        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
         "desc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
         "parameters" : [
           " * None",
@@ -205,7 +209,6 @@
           "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.",
           ""
         ],
-        "doc" : "Stops intercepting Cmd+Tab (the system app switcher comes back) and quits the panel helper.\n\nParameters:\n * None\n\nReturns:\n * The WindowSwitcher object",
         "notes" : [
 
         ],
@@ -217,9 +220,6 @@
         "def" : "WindowSwitcher:stop()",
         "name" : "stop"
       }
-    ],
-    "Command" : [
-
     ],
     "name" : "WindowSwitcher"
   }
