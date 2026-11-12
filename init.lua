@@ -12,6 +12,7 @@
 ---  * Esc            - cancel
 ---
 --- A quick Cmd+Tab tap switches straight back to the previous window without showing the panel.
+--- Each cell shows a thumbnail of its window, as you last left it (turn off with `WindowSwitcher.preview = 0`).
 ---
 --- How it works: this file does all the logic (key interception, window list, focusing).
 --- `glass.swift` only draws the panel. It is compiled to `glass` on first start
@@ -36,7 +37,7 @@ local ESC = hs.keycodes.map.escape
 local obj = {}
 obj.__index = obj
 obj.name = "WindowSwitcher"
-obj.version = "1.1.0"
+obj.version = "1.2.0"
 obj.author = "ZachariahJ"
 obj.homepage = "https://github.com/ZachariahJ/WindowSwitcher.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
@@ -51,6 +52,20 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 --- Notes:
 ---  * Example: show the panel immediately → `spoon.WindowSwitcher.delay = 0` before `:start()`
 obj.delay = 0.12
+
+--- WindowSwitcher.preview
+--- Variable
+--- `1` shows a thumbnail of each window in the panel, `0` shows just app icons. Default `1`.
+---
+--- Notes:
+---  * Thumbnails come from a cache, so the panel shows them instantly: pressing Cmd+Tab captures the
+---    current window, any window is captured when it loses focus (mouse click, Dock...), and all windows on
+---    the current Space at start and every 300 s. They are kept in memory only.
+---  * Needs Screen Recording permission for Hammerspoon (System Settings → Privacy & Security → Screen Recording).
+---    Without it, or for a window not captured yet, the cell shows the app icon instead.
+---  * Example: icons only, like before → `spoon.WindowSwitcher.preview = 0` before `:start()`
+---  * Example: change it later → change the value and reload (capturing is set up in `:start()`)
+obj.preview = 1
 
 -- Paths inside this Spoon's folder. glass and glass.sha256 are build outputs (not shipped).
 local SRC = hs.spoons.resourcePath("glass.swift")
@@ -96,11 +111,40 @@ end
 
 -- Talk to glass
 -- One JSON object per line on its stdin, e.g. {"cmd":"select","sel":2}
-local function send(t)
-  if obj.task and obj.task:isRunning() then
-    obj.task:setInput(hs.json.encode(t) .. "\n")
-  end
+-- hs.task:setInput writes later and keeps only one pending write (a second call drops the first,
+-- e.g. "hide" then "snap" lost the hide). So lines are queued and written in one batch, and the next batch
+-- waits until glass has read every line of the last (it answers each with {"event":"read"}, see onOutput).
+local queue, unread = {}, 0   -- lines waiting / lines written but not yet read by glass
+local function flush()
+  if unread > 0 or #queue == 0 or not (obj.task and obj.task:isRunning()) then return end
+  unread = #queue
+  obj.task:setInput(table.concat(queue))
+  queue = {}
 end
+local function send(t) queue[#queue + 1] = hs.json.encode(t) .. "\n"; flush() end
+
+-- Thumbnail cache
+-- glass keeps the thumbnails in memory; this part decides when to capture, by sending
+-- {"cmd":"snap","wids":[...]} (window IDs). Only when obj.preview == 1 (set up in :start()).
+--   · Cmd+Tab pressed → capture the current window (in step(), so its cell is up to date)
+--   · a window loses focus → capture it (covers leaving by mouse click, Dock, etc.; after a Cmd+Tab
+--     switch this captures the same window a second time, a few ms of CPU, not worth special-casing)
+--   · at start, then every REFRESH seconds → capture every window on the current Space
+--     (catches windows not captured yet, and ones that changed in the background)
+--
+-- Example: refresh every minute → REFRESH = 60 (a round of 10 windows takes a few ms of CPU)
+-- Example: no periodic refresh → delete the `self.sweep` line in :start()
+-- Example: only on Cmd+Tab, not on losing focus → delete the wf:subscribe line in :start()
+local REFRESH = 300
+
+local function snap(wins)
+  local ids = {}
+  for i, win in ipairs(wins) do ids[i] = win:id() end
+  if #ids > 0 then send({ cmd = "snap", wids = ids }) end
+end
+
+local function onUnfocus(win) snap({ win }) end
+local function snapAll() snap(wf:getWindows()) end
 
 -- State
 obj.windows = nil  -- window list while switching; nil when not switching
@@ -113,7 +157,11 @@ obj.shown = false  -- whether glass is currently showing the panel
 -- Every call: move the selection, wrapping around; if the panel is visible, send "select".
 --
 -- The panel goes on the screen under the mouse; glass gets that screen's display ID.
+-- Each item also carries the window's ID (wid, a CGWindowID) so glass can capture its thumbnail;
+-- preview = true/false comes from obj.preview (1 / 0).
 --
+-- Example: preview only when there are few windows (big lists get icons) → change the preview line to
+--     preview = obj.preview == 1 and #obj.windows <= 8,
 -- Example: show something else for untitled windows (e.g. "(untitled)") → change app:name() in the title line
 -- Example: show on the focused window's screen instead → change the screen line to
 --     local focused = hs.window.focusedWindow()
@@ -125,16 +173,18 @@ local function step(dir)
     obj.windows = wf:getWindows(hs.window.filter.sortByFocusedLast)
     if #obj.windows == 0 then obj.windows = nil return end
     obj.index = 1
+    if obj.preview == 1 then snap({ obj.windows[1] }) end  -- the current window, as you leave it
     obj.timer = hs.timer.doAfter(obj.delay, function()
       local items = {}
       for i, win in ipairs(obj.windows) do
         local app = win:application()
         local title = win:title() or ""
         if title == "" and app then title = app:name() end
-        items[i] = { id = app and app:bundleID() or "", title = title }
+        items[i] = { id = app and app:bundleID() or "", title = title, wid = win:id() }
       end
       local screen = hs.mouse.getCurrentScreen()
-      send({ cmd = "show", sel = obj.index - 1, screen = screen and screen:id(), items = items })
+      send({ cmd = "show", sel = obj.index - 1, screen = screen and screen:id(), items = items,
+             preview = obj.preview == 1 })
       obj.shown = true
     end)
   end
@@ -158,10 +208,14 @@ end
 --
 -- Example: a click only moves the selection (releasing Cmd switches) → replace the two lines in the if with
 --     obj.index = m.sel + 1; send({ cmd = "select", sel = m.sel })
+-- glass also prints {"event":"read"} for every line it reads (see "Talk to glass").
 local function onOutput(_, out)
   for line in (out or ""):gmatch("[^\n]+") do
     local ok, m = pcall(hs.json.decode, line)
-    if ok and type(m) == "table" and m.event == "click" and obj.windows and obj.windows[m.sel + 1] then
+    if ok and type(m) == "table" and m.event == "read" then
+      unread = unread - 1
+      flush()
+    elseif ok and type(m) == "table" and m.event == "click" and obj.windows and obj.windows[m.sel + 1] then
       obj.index = m.sel + 1
       finish(true)
     end
@@ -220,6 +274,7 @@ function obj:start()
     return self
   end
   if not build() then return self end
+  queue, unread = {}, 0   -- fresh glass process: nothing pending
   -- The third argument (a streaming callback) is required: without it, hs.task closes
   -- stdin after the first write, and glass exits on EOF. It also receives glass's stdout (clicks).
   self.task = hs.task.new(BIN, function(code)
@@ -227,6 +282,11 @@ function obj:start()
   end, onOutput)
   self.task:start()
   self.tap:start()
+  if self.preview == 1 then
+    wf:subscribe(hs.window.filter.windowUnfocused, onUnfocus)
+    self.sweep = hs.timer.doEvery(REFRESH, snapAll)
+    snapAll()
+  end
   return self
 end
 
@@ -241,6 +301,9 @@ end
 ---  * The WindowSwitcher object
 function obj:stop()
   self.tap:stop()
+  wf:unsubscribe(onUnfocus)
+  if self.sweep then self.sweep:stop() end
+  self.sweep = nil
   if self.windows then finish(false) end
   if self.task then self.task:terminate() end
   self.task = nil

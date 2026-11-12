@@ -10,7 +10,8 @@
 - 同一个应用的多个窗口各占一格，可以直接跳到想要的那个。
 - 按最近使用排序：快速按一下 Cmd+Tab 就回到上一个窗口，不弹面板。
 - 面板用的是系统真正的 `NSGlassEffectView`（macOS 26 的 Liquid Glass），不是模仿出来的。
-- 快：不截窗口缩略图；面板由一个常驻后台的小程序绘制（约 8 MB 内存）。
+- 窗口缩略图，面板一打开就有（可以关掉）。按下 Cmd+Tab 时截一张当前窗口，窗口失去焦点时也截一张，每 5 分钟再刷新一次全部窗口；缩略图只存在内存里。
+- 轻量：面板由一个常驻后台的小程序绘制；按 Cmd+Tab 时只截当前这一个窗口。
 
 ## 按键
 
@@ -30,6 +31,7 @@
 - macOS 26 或更高版本
 - [Hammerspoon](https://www.hammerspoon.org)，并授予辅助功能权限
 - Xcode Command Line Tools（`xcode-select --install`），用来编译面板小程序
+- Hammerspoon 的屏幕录制权限，仅缩略图需要（没有的话面板显示应用图标）
 
 ## 安装
 
@@ -68,6 +70,7 @@ spoon.WindowSwitcher:start()
 ```lua
 hs.loadSpoon("WindowSwitcher")
 spoon.WindowSwitcher.delay = 0   -- 一按就弹出面板（默认 0.12 秒）
+spoon.WindowSwitcher.preview = 0 -- 只显示应用图标，不要窗口缩略图（默认 1）
 spoon.WindowSwitcher:start()
 ```
 
@@ -75,7 +78,7 @@ spoon.WindowSwitcher:start()
 
 源码注释里有更多改法和示例：
 改成 Alt+Tab、用方向键移动、列出所有桌面的窗口、排除某个应用、面板出现在哪块显示器（见 `init.lua`）；
-更通透或带颜色的玻璃、尺寸、面板位置（见 `glass.swift`）。
+缩略图多久刷新一次（见 `init.lua`）；更通透或带颜色的玻璃、尺寸、面板位置、缩略图大小（见 `glass.swift`）。
 
 ## 原理
 
@@ -84,6 +87,7 @@ spoon.WindowSwitcher:start()
 - `glass.swift` 负责显示面板。Hammerspoon 自己画不出 Liquid Glass，所以用这个 AppKit 小程序来画。
   它在第一次启动时被编译成 `glass`，常驻后台，从标准输入每行接收一条 JSON 命令（`show`、`select`、`hide`）。
   鼠标点击也用同样的方式传回 `init.lua`：往标准输出写一行 JSON。
+  缩略图由 `glass` 用 ScreenCaptureKit 截取并缓存在内存里；截哪些窗口、什么时候截由 `init.lua` 决定（`snap` 命令）。
   Hammerspoon 重载或退出时它会自动退出。
 
 ## 开发

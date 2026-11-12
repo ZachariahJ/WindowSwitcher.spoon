@@ -10,7 +10,9 @@ Windows-style Alt+Tab for macOS, as a [Hammerspoon](https://www.hammerspoon.org)
 - Two windows of the same app are separate entries, so you can jump straight to the one you want.
 - Most recently used first: a quick Cmd+Tab tap goes back to the previous window without showing the panel.
 - The panel is a real `NSGlassEffectView` (macOS 26 Liquid Glass), not an imitation.
-- Fast: no window thumbnails; the panel is drawn by a small native helper that stays running (~8 MB).
+- Window thumbnails, ready the moment the panel opens (can be turned off). Pressing Cmd+Tab captures the current window,
+  a window is also captured when it loses focus, and all windows every 5 minutes; thumbnails are kept in memory only.
+- Light: the panel is drawn by a small native helper that stays running; Cmd+Tab captures only the current window.
 
 ## Keys
 
@@ -30,6 +32,7 @@ Only windows on the current Space are listed. The panel appears on the display u
 - macOS 26 or later
 - [Hammerspoon](https://www.hammerspoon.org), with Accessibility permission
 - Xcode Command Line Tools (`xcode-select --install`), used to compile the panel helper
+- Screen Recording permission for Hammerspoon, for the thumbnails only (without it the panel shows app icons)
 
 ## Install
 
@@ -68,6 +71,7 @@ It only recompiles when `glass.swift` changes.
 ```lua
 hs.loadSpoon("WindowSwitcher")
 spoon.WindowSwitcher.delay = 0   -- show the panel immediately (default 0.12 s)
+spoon.WindowSwitcher.preview = 0 -- app icons only, no window thumbnails (default 1)
 spoon.WindowSwitcher:start()
 ```
 
@@ -75,7 +79,7 @@ spoon.WindowSwitcher:start()
 
 More tweaks are documented as comments in the source, with examples:
 Alt+Tab instead of Cmd+Tab, arrow keys, all Spaces, hiding apps, which display the panel appears on (`init.lua`);
-clear or tinted glass, sizes, panel position (`glass.swift`).
+how often thumbnails refresh (`init.lua`); clear or tinted glass, sizes, panel position, thumbnail size (`glass.swift`).
 
 ## How it works
 
@@ -84,6 +88,8 @@ clear or tinted glass, sizes, panel position (`glass.swift`).
 - `glass.swift` draws the panel. Hammerspoon can't create Liquid Glass itself, so this small AppKit program does it.
   It's compiled to `glass` on first start, runs in the background, and gets one JSON command per line on stdin
   (`show`, `select`, `hide`). Clicks go back to `init.lua` the same way, one JSON line on stdout.
+  Thumbnails are captured by `glass` with ScreenCaptureKit and cached in memory; `init.lua` tells it which windows
+  to capture and when (`snap`).
   It exits when Hammerspoon reloads or quits.
 
 ## Development
